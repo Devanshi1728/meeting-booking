@@ -48,6 +48,14 @@ export const BookingModal = ({ room, onClose }: Props) => {
               onChange={(e) => setDate(e.target.value)}
             />
           </label>
+           <label className="block text-sm text-slate-600">
+            Department name
+            <input className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Legal" />
+          </label>
+          
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm text-slate-600">
             Start
             <input
@@ -58,9 +66,6 @@ export const BookingModal = ({ room, onClose }: Props) => {
               onChange={(e) => setStart(e.target.value)}
             />
           </label>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm text-slate-600">
             End
             <input
@@ -71,10 +76,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
               onChange={(e) => setEnd(e.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-600">
-            Department name
-            <input className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Legal" />
-          </label>
+         
         </div>
 
   

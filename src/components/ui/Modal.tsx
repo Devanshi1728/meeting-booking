@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { X } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 type ModalProps = {
   title?: string
@@ -13,7 +14,9 @@ export const Modal = ({ title, children, onClose }: ModalProps) => {
       <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-lg">
         <div className="flex items-start justify-between">
           {title ? <h3 className="text-lg font-semibold">{title}</h3> : <div />}
-          <button onClick={onClose} className="text-sm text-slate-600 hover:text-slate-900">Close</button>
+          <button onClick={onClose} className="text-sm text-slate-600 hover:text-slate-900">
+            <X />
+          </button>
         </div>
         <div className="mt-4">{children}</div>
       </div>
