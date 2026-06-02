@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { AuthState, AuthUser, LoginFormValues, RegisterFormValues } from '../types'
 import type { ReactNode } from 'react'
 
+const AUTH_STATE_KEY = 'meeting-booking-auth'
+const AUTH_TOKEN_KEY = 'meeting-booking-token'
+const API_BASE_URL = 'http://localhost:5000'
 
 type AuthContextValue = {
   user: AuthUser | null
@@ -13,25 +16,9 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const STORAGE_KEY = 'meeting-booking-auth'
-const USERS_KEY = 'meeting-booking-users'
-
-const readUsers = (): Array<AuthUser & { password: string }> => {
-  try {
-    const raw = localStorage.getItem(USERS_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const saveUsers = (users: Array<AuthUser & { password: string }>) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
-
 const readAuthState = (): AuthState => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(AUTH_STATE_KEY)
     return raw ? JSON.parse(raw) : { user: null }
   } catch {
     return { user: null }
@@ -39,14 +26,24 @@ const readAuthState = (): AuthState => {
 }
 
 const saveAuthState = (state: AuthState) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  localStorage.setItem(AUTH_STATE_KEY, JSON.stringify(state))
+}
+
+const saveAuthToken = (token: string) => {
+  localStorage.setItem(AUTH_TOKEN_KEY, token)
+}
+
+const clearAuth = () => {
+  localStorage.removeItem(AUTH_STATE_KEY)
+  localStorage.removeItem(AUTH_TOKEN_KEY)
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AuthState>({ user: null })
 
   useEffect(() => {
-    setState(readAuthState())
+    const storedState = readAuthState()
+    setState(storedState)
   }, [])
 
   useEffect(() => {
@@ -56,34 +53,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const authenticated = useMemo(() => Boolean(state.user), [state.user])
 
   const login = async ({ email, password }: LoginFormValues) => {
-    const user = readUsers().find((record) => record.email === email.toLowerCase())
-    if (!user) return 'No account found for this email.'
-    if (user.password !== password) return 'Invalid password.'
-    const authUser: AuthUser = { id: user.id, name: user.name, email: user.email }
-    setState({ user: authUser })
-    return null
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        return data.message || 'Unable to log in.'
+      }
+
+      saveAuthToken(data.data.token)
+      setState({ user: data.data.user })
+      return null
+    } catch {
+      return 'Unable to log in. Please try again.'
+    }
   }
 
-  const register = async ({ name, email, password, confirmPassword }: RegisterFormValues) => {
+  const register = async ({ name, email, department, password, confirmPassword }: RegisterFormValues) => {
     if (password !== confirmPassword) return 'Passwords do not match.'
-    const normalizedEmail = email.toLowerCase()
-    const users = readUsers()
-    if (users.some((record) => record.email === normalizedEmail)) {
-      return 'An account with this email already exists.'
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, department, password }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        return data.message || 'Unable to register.'
+      }
+
+      saveAuthToken(data.data.token)
+      setState({ user: data.data.user })
+      return null
+    } catch {
+      return 'Unable to register. Please try again.'
     }
-    const newUser = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      email: normalizedEmail,
-      password,
-    }
-    users.push(newUser)
-    saveUsers(users)
-    setState({ user: { id: newUser.id, name: newUser.name, email: newUser.email } })
-    return null
   }
 
   const logout = () => {
+    clearAuth()
     setState({ user: null })
   }
 

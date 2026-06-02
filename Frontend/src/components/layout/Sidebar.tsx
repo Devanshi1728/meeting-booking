@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 const links = [
   { label: 'Dashboard', to: '/dashboard', icon: '📊' },
   { label: 'My Bookings', to: '/bookings', icon: '🗓️' },
-  { label: 'Calendar View', to: '/calendar', icon: '📅' },
+  // { label: 'Calendar View', to: '/calendar', icon: '📅' },
 ]
 
 export const Sidebar = () => {
@@ -39,7 +39,7 @@ export const Sidebar = () => {
 
       <div className="mt-auto rounded-3xl bg-slate-50 px-5 py-4 text-sm text-slate-700 shadow-sm">
         <p className="font-semibold text-slate-900">{user?.name || 'Guest'}</p>
-        <p className="mt-1 text-slate-500">Frontend Developer</p>
+        <p className="mt-1 text-slate-500">{user?.department || 'No department'}</p>
       </div>
     </aside>
   )

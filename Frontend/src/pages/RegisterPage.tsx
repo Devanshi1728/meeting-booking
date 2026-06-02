@@ -8,20 +8,21 @@ import { validateEmail, validatePassword, validateName } from '../lib/validators
 export const RegisterPage = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', department: '' })
   const [error, setError] = useState('')
-  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', password: '', confirmPassword: '' })
+  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', department: '', password: '', confirmPassword: '' })
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const nameError = validateName(form.name)
     const emailError = validateEmail(form.email)
+    const departmentError = form.department ? '' : 'Department is required.'
     const passwordError = validatePassword(form.password)
     const confirmError = form.password === form.confirmPassword ? '' : 'Passwords do not match.'
 
-    setFieldErrors({ name: nameError, email: emailError, password: passwordError, confirmPassword: confirmError })
-    if (nameError || emailError || passwordError || confirmError) return
+    setFieldErrors({ name: nameError, email: emailError, department: departmentError, password: passwordError, confirmPassword: confirmError })
+    if (nameError || emailError || departmentError || passwordError || confirmError) return
 
     const registerError = await register(form)
     if (registerError) {
@@ -64,6 +65,17 @@ export const RegisterPage = () => {
               placeholder="hello@example.com"
             />
             {fieldErrors.email ? <p className="text-xs text-rose-600">{fieldErrors.email}</p> : null}
+          </div>
+
+           <div className="space-y-2">
+            <Input
+              label="Department"
+              type="text"
+              value={form.department}
+              onChange={(event) => setForm({ ...form, department: event.target.value })}
+              placeholder="Technology"
+            />
+            {fieldErrors.department ? <p className="text-xs text-rose-600">{fieldErrors.department}</p> : null}
           </div>
 
           <div className="space-y-2">

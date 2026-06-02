@@ -13,9 +13,20 @@ CREATE TABLE IF NOT EXISTS departments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  department_name TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS bookings (
   id SERIAL PRIMARY KEY,
   room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_name TEXT NOT NULL,
   department_name TEXT NOT NULL,
   date DATE NOT NULL,
   start_time TIME NOT NULL,
@@ -33,6 +44,6 @@ INSERT INTO departments (name) VALUES
   ('Customer Service'),
   ('Merchandising'),
   ('Legal'),
-  ('Founder\'s Office'),
+  ('Founder''s Office'),
   ('Project')
 ON CONFLICT (name) DO NOTHING;

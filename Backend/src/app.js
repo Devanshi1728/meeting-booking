@@ -3,6 +3,7 @@ const cors = require("cors");
 const roomRoutes = require("./routes/room.routes");
 const bookingRoutes = require("./routes/booking.routes");
 const departmentRoutes = require("./routes/department.routes");
+const authRoutes = require("./routes/auth.routes");
 const notFound = require("./middlewares/notFound.middleware");
 const errorHandler = require("./middlewares/error.middleware");
 
@@ -21,6 +22,7 @@ app.get("/health", (req, res) => {
 app.use("/rooms", roomRoutes);
 app.use("/booking", bookingRoutes);
 app.use("/departments", departmentRoutes);
+app.use("/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

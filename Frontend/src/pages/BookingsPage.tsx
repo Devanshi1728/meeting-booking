@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchBookings, updateBooking, fetchDepartments } from '../lib/api'
 import type { BookingApi, UpdateBookingPayload, Department } from '../types'
 import { Button } from '../components/ui/Button'
-import { Badge } from '../components/ui/Badge'
 
 const formatBookingDate = (value: string) => {
   const date = new Date(value)
@@ -31,6 +30,7 @@ export const BookingsPage = () => {
   })
 
   const [editingBooking, setEditingBooking] = useState<BookingApi | null>(null)
+  const [userName, setUserName] = useState('')
   const [departmentName, setDepartmentName] = useState('')
   const [editDate, setEditDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')
@@ -40,6 +40,7 @@ export const BookingsPage = () => {
 
   useEffect(() => {
     if (editingBooking) {
+      setUserName(editingBooking.user_name)
       setDepartmentName(editingBooking.department_name)
       setEditDate(editingBooking.date)
       setStartTime(editingBooking.start_time)
@@ -47,6 +48,7 @@ export const BookingsPage = () => {
       setFormError('')
       setFormSuccess('')
     } else {
+      setUserName('')
       setDepartmentName('')
       setEditDate('')
       setStartTime('09:00')
@@ -74,6 +76,10 @@ export const BookingsPage = () => {
     setFormSuccess('')
 
     if (!editingBooking) return
+    if (!userName.trim()) {
+      setFormError('Name is required')
+      return
+    }
     if (!departmentName.trim()) {
       setFormError('Department name is required')
       return
@@ -82,6 +88,7 @@ export const BookingsPage = () => {
     mutation.mutate({
       id: editingBooking.id,
       payload: {
+        user_name: userName.trim(),
         department_name: departmentName.trim(),
         date: editDate,
         start_time: startTime,
@@ -116,6 +123,16 @@ export const BookingsPage = () => {
           <form onSubmit={handleEditSubmit} className="mt-6 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm text-slate-600">
+                Name
+                <input
+                  required
+                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                  type="text"
+                  value={userName}
+                  onChange={(event) => setUserName(event.target.value)}
+                />
+              </label>
+              <label className="block text-sm text-slate-600">
                 Department
                 <select
                   required
@@ -131,6 +148,9 @@ export const BookingsPage = () => {
                   ))}
                 </select>
               </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm text-slate-600">
                 Date
                 <input
@@ -141,28 +161,25 @@ export const BookingsPage = () => {
                   onChange={(event) => setEditDate(event.target.value)}
                 />
               </label>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm text-slate-600">
-                Start time
-                <input
-                  required
-                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
-                  type="time"
-                  value={startTime}
-                  onChange={(event) => setStartTime(event.target.value)}
-                />
-              </label>
-              <label className="block text-sm text-slate-600">
-                End time
-                <input
-                  required
-                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
-                  type="time"
-                  value={endTime}
-                  onChange={(event) => setEndTime(event.target.value)}
-                />
+                Time
+                <div className="mt-2 flex gap-2">
+                  <input
+                    required
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                    type="time"
+                    value={startTime}
+                    onChange={(event) => setStartTime(event.target.value)}
+                  />
+                  <span className="flex items-center text-slate-500">to</span>
+                  <input
+                    required
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                    type="time"
+                    value={endTime}
+                    onChange={(event) => setEndTime(event.target.value)}
+                  />
+                </div>
               </label>
             </div>
 
@@ -181,35 +198,52 @@ export const BookingsPage = () => {
         </div>
       ) : null}
 
-      <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">Loading bookings…</div>
+          <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">Loading bookings…</div>
         ) : isError ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-rose-600">Unable to load bookings.</div>
+          <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-rose-600">Unable to load bookings.</div>
         ) : bookings.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">No bookings found.</div>
+          <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">No bookings found.</div>
         ) : (
           bookings.map((booking) => (
-            <div key={booking.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div key={booking.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="space-y-4 p-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">{booking.room_name}</h3>
-                  <p className="mt-2 text-sm text-slate-500">{booking.department_name}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {formatBookingDate(booking.date)} • {booking.start_time} - {booking.end_time}
-                  </p>
+                  <p className="mt-1 text-sm text-slate-500">{booking.user_name}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="success" label="Confirmed" />
-                  <Button variant="ghost" onClick={() => setEditingBooking(booking)}>
-                    Edit
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-3">
+                    <span>📋</span>
+                    <div className="text-xs">
+                      <p className="font-semibold text-slate-700">{booking.department_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 p-3">
+                    <span>⏰</span>
+                    <div className="text-xs">
+                      <p className="font-semibold text-slate-700">{formatBookingDate(booking.date)}</p>
+                      <p className="text-slate-500">{booking.start_time} - {booking.end_time}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                    <span>🆔</span> Room {booking.room_id}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                    <span>🪑</span> {booking.capacity || 0} seats
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500">
+                  Booked on {formatBookingDate(booking.created_at)}
                 </div>
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Room ID {booking.room_id}</div>
-                <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Booked on {formatBookingDate(booking.created_at)}</div>
-                <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-600">{booking.capacity ? `${booking.capacity} seats` : 'Capacity unknown'}</div>
+              <div className="flex gap-2 border-t border-slate-200 p-1">
+                <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1">
+                  Edit
+                </Button>
               </div>
             </div>
           ))
