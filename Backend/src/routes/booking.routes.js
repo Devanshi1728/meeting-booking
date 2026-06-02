@@ -1,11 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const bookingController = require('../controller/booking.controller');
 
-router.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Booking route placeholder',
-  });
-});
+router.get('/', bookingController.getAllBookings);
+router.post('/', bookingController.createBooking);
+router.put('/:id', bookingController.updateBooking);
 
 module.exports = router;

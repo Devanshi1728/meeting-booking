@@ -9,9 +9,9 @@ type ModalProps = {
 
 export const Modal = ({ title, children, onClose }: ModalProps) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 pointer-events-auto" onClick={onClose} />
+      <div className="relative z-10 pointer-events-auto max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-lg">
         <div className="flex items-start justify-between">
           {title ? <h3 className="text-lg font-semibold">{title}</h3> : <div />}
           <button onClick={onClose} className="text-sm text-slate-600 hover:text-slate-900">

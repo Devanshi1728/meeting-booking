@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Modal from './ui/Modal'
 import { Button } from './ui/Button'
-import type { Room } from '../data/rooms'
+import { createBooking, fetchDepartments } from '../lib/api'
+import type { RoomApi, CreateBookingPayload, Department } from '../types'
 
 type Props = {
-  room: Room
+  room: RoomApi
   onClose: () => void
 }
 
@@ -13,7 +15,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
   const today = new Date()
   const formatDate = (d: Date) => d.toISOString().slice(0, 10)
   const minDate = formatDate(today)
-  const maxDate = formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5))
+  const maxDate = formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7))
 
   const [date, setDate] = useState<string>(minDate)
   // use HTML time inputs (24h) for native time pickers
@@ -21,15 +23,45 @@ export const BookingModal = ({ room, onClose }: Props) => {
   const [end, setEnd] = useState<string>('15:00')
   const [name, setName] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
+  const [error, setError] = useState<string>('')
+
+  const queryClient = useQueryClient()
+  const { data: departments = [] } = useQuery<Department[]>({
+    queryKey: ['departments'],
+    queryFn: fetchDepartments,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const mutation = useMutation({
+    mutationFn: createBooking,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      setSuccess('Booked successfully')
+      setTimeout(() => onClose(), 900)
+    },
+    onError: (err: unknown) => {
+      setError(err instanceof Error ? err.message : 'Unable to book room')
+    },
+  })
 
   const submit = (e: any) => {
     e.preventDefault()
-    // naive local persistence
-    const bookings = JSON.parse(localStorage.getItem('meeting-booking-bookings') || '[]')
-    bookings.push({ id: crypto.randomUUID(), room: room.name, date, start, end, name })
-    localStorage.setItem('meeting-booking-bookings', JSON.stringify(bookings))
-    setSuccess('Booked successfully')
-    setTimeout(() => onClose(), 900)
+    setError('')
+
+    if (!name.trim()) {
+      setError('Department is required')
+      return
+    }
+
+    const payload: CreateBookingPayload = {
+      room_id: room.id,
+      department_name: name.trim(),
+      date,
+      start_time: start,
+      end_time: end,
+    }
+
+    mutation.mutate(payload)
   }
 
   return (
@@ -49,8 +81,20 @@ export const BookingModal = ({ room, onClose }: Props) => {
             />
           </label>
            <label className="block text-sm text-slate-600">
-            Department name
-            <input className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Legal" />
+            Department
+            <select
+              required
+              className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            >
+              <option value="">Select a department</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.name}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
           </label>
           
         </div>
@@ -81,10 +125,13 @@ export const BookingModal = ({ room, onClose }: Props) => {
 
   
         <div className="flex items-center gap-3">
-          <Button type="submit">Confirm Booking</Button>
+          <Button type="submit" disabled={mutation.status === 'pending'}>
+            {mutation.status === 'pending' ? 'Booking…' : 'Confirm Booking'}
+          </Button>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
         </div>
 
+        {error ? <div className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">{error}</div> : null}
         {success ? <div className="rounded-2xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">{success}</div> : null}
       </form>
     </Modal>

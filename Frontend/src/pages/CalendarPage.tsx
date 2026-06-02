@@ -1,5 +1,3 @@
-import { Badge } from '../components/ui/Badge'
-
 const events = [
   { title: 'Emerald Room', time: '02:00 - 03:00 PM', color: 'bg-emerald-100 text-emerald-900' },
   { title: 'Sapphire Room', time: '09:00 - 10:00 AM', color: 'bg-sky-100 text-sky-900' },
