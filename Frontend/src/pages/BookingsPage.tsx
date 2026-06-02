@@ -207,7 +207,8 @@ export const BookingsPage = () => {
           <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">No bookings found.</div>
         ) : (
           bookings.map((booking) => (
-            <div key={booking.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div key={booking.id} 
+            className={`flex flex-col rounded-3xl border border-slate-200 ${booking.date < new Date().toISOString().split('T')[0] ? 'bg-slate-100' : 'bg-white'} shadow-sm`}>
               <div className="space-y-4 p-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">{booking.room_name}</h3>
@@ -241,7 +242,8 @@ export const BookingsPage = () => {
                 </div>
               </div>
               <div className="flex gap-2 border-t border-slate-200 p-1">
-                <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1">
+                <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1" 
+                  disabled={booking.date < new Date().toISOString().split('T')[0] || mutation.status === 'pending'}>
                   Edit
                 </Button>
               </div>

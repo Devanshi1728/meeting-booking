@@ -84,6 +84,12 @@ export const BookingModal = ({ room, onClose }: Props) => {
       return
     }
 
+    if(start >= end && start < new Date().toISOString().slice(0, 10) 
+      || start < new Date().toTimeString().slice(0, 5)) {
+      setError('End time must be after start time')
+      return
+    }
+
     const payload: CreateBookingPayload = {
       room_id: room.id,
       user_name: userName.trim(),
