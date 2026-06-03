@@ -9,6 +9,7 @@ const API_BASE_URL = 'http://localhost:5000'
 type AuthContextValue = {
   user: AuthUser | null
   authenticated: boolean
+  initializing: boolean
   login: (payload: LoginFormValues) => Promise<string | null>
   register: (payload: RegisterFormValues) => Promise<string | null>
   logout: () => void
@@ -39,11 +40,47 @@ const clearAuth = () => {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AuthState>({ user: null })
+  const [state, setState] = useState<AuthState>(() => readAuthState())
+  const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
-    const storedState = readAuthState()
-    setState(storedState)
+    const initialize = async () => {
+      const storedState = readAuthState()
+      if (storedState.user) {
+        setState(storedState)
+        setInitializing(false)
+        return
+      }
+
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      if (!token) {
+        setInitializing(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const data = await response.json()
+        if (response.ok && data.data?.user) {
+          setState({ user: data.data.user })
+        } else {
+          clearAuth()
+        }
+      } catch {
+        clearAuth()
+      } finally {
+        setInitializing(false)
+      }
+    }
+
+    initialize()
   }, [])
 
   useEffect(() => {
@@ -102,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user: state.user, authenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ user: state.user, authenticated, initializing, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )

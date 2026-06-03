@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { MainLayout } from './components/layout/MainLayout'
@@ -7,8 +8,13 @@ import { DashboardPage } from './pages/DashboardPage'
 import { BookingsPage } from './pages/BookingsPage'
 import { CalendarPage } from './pages/CalendarPage'
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { authenticated } = useAuth()
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { authenticated, initializing } = useAuth()
+
+  if (initializing) {
+    return null
+  }
+
   return authenticated ? children : <Navigate to="/login" replace />
 }
 
