@@ -57,6 +57,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
     mutationFn: createBooking,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['rooms'] })
       setSuccess('Booked successfully')
       setTimeout(() => onClose(), 900)
     },
@@ -85,8 +86,13 @@ export const BookingModal = ({ room, onClose }: Props) => {
     }
 
     if(start >= end && start < new Date().toISOString().slice(0, 10) 
-      || start < new Date().toTimeString().slice(0, 5)) {
+    ) {
       setError('End time must be after start time')
+      return
+    }
+
+    if(start < new Date().toTimeString().slice(0, 5) && date === new Date().toISOString().slice(0, 10)) {
+      setError('Start time must be in the future')
       return
     }
 

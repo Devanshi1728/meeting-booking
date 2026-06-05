@@ -206,9 +206,18 @@ export const BookingsPage = () => {
         ) : bookings.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">No bookings found.</div>
         ) : (
-          bookings.map((booking) => (
+          bookings.map((booking) => 
+          {
+              const bookingEnd = new Date(
+              `${booking.date.split('T')[0]}T${booking.end_time}`
+            );
+              const isPast = bookingEnd.getTime() < Date.now();
+            console.log(isPast, bookingEnd.getTime(), Date.now())
+           return (
             <div key={booking.id} 
-            className={`flex flex-col rounded-3xl border border-slate-200 ${booking.date < new Date().toISOString().split('T')[0] ? 'bg-slate-100' : 'bg-white'} shadow-sm`}>
+           className={`flex flex-col rounded-3xl border border-slate-200 ${
+                    isPast ? 'bg-slate-100' : 'bg-white'
+                  } shadow-sm`}>
               <div className="space-y-4 p-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">{booking.room_name}</h3>
@@ -248,7 +257,7 @@ export const BookingsPage = () => {
                 </Button>
               </div>
             </div>
-          ))
+          )})
         )}
       </div>
     </div>

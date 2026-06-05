@@ -39,6 +39,7 @@ export const Sidebar = () => {
 
       <div className="mt-auto rounded-3xl bg-slate-50 px-5 py-4 text-sm text-slate-700 shadow-sm">
         <p className="font-semibold text-slate-900">{user?.name || 'Guest'}</p>
+        <p className="mt-1 text-slate-500">{user?.email}</p>
         <p className="mt-1 text-slate-500">{user?.department || 'No department'}</p>
       </div>
     </aside>

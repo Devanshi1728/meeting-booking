@@ -18,12 +18,6 @@ export const DashboardPage = () => {
     staleTime: 1000 * 60 * 2,
   })
 
-  const date = () => {
-    const today = new Date()
-    const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' }
-    return today.toLocaleDateString(undefined, options)
-  }
-
   return (
     <div className={`grid gap-6 ${selectedRoom ? 'xl:grid-cols-[1.25fr_0.9fr]' : 'grid-cols-1'}`}>
       <section className="space-y-6 rounded-3xl border border-slate-200 bg-slate-50 p-6">
@@ -64,7 +58,7 @@ export const DashboardPage = () => {
                       setBookingRoom(room)
                     }
                   }}
-                  className={`flex h-full min-h-[260px] ${isBusy ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'} flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition hover:shadow-lg`}
+                  className={`flex h-full min-h-[260px] cursor-pointer flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition hover:shadow-lg`}
                 >
                   <div className="relative h-44 w-full overflow-hidden">
                     <img className="h-full w-full object-cover" src={placeholderImage} alt={room.name} />
@@ -105,8 +99,8 @@ export const DashboardPage = () => {
                         </div>
                       )}
                     </div>
-                    <Button disabled={isBusy} className="w-full">
-                      {room.is_busy ? 'Busy' : room.is_active ? 'Book Now' : 'View Slots'}
+                    <Button className="w-full">
+                      {room.is_active ? 'Book Now' : 'View Slots'}
                     </Button>
                   </div>
                 </article>

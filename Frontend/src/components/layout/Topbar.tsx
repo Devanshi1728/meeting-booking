@@ -11,7 +11,10 @@ export const Topbar = ({ onLogout }: { onLogout: () => void }) => {
         <h1 className="mt-2 text-2xl font-semibold text-slate-900">Welcome back, {user?.name || 'Alex'} 👋</h1>
       </div>
       <div className="flex items-center gap-3">
-        <div className="rounded-3xl bg-slate-100 px-4 py-3 text-sm text-slate-700">{new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}</div>
+        <div className="flex gap-2 rounded-3xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+          <span>{new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}</span>
+          {/* <span>{new Date().toLocaleString('en-US', { weekday: 'long' })}</span> */}
+        </div>
         <Button variant="secondary" onClick={onLogout}>
           Logout
         </Button>

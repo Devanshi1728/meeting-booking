@@ -21,7 +21,9 @@ const getAllBookings = async ({ userId, roomId, date } = {}) => {
   }
 
   const query = `
-    SELECT b.id, b.room_id, b.user_id, b.user_name, b.department_name, b.date, b.start_time, b.end_time, b.created_at,
+    SELECT b.id, b.room_id, b.user_id, b.user_name, b.department_name, 
+           TO_CHAR(b.date, 'YYYY-MM-DD') AS date, b.start_time, b.end_time, 
+           TO_CHAR(b.created_at, 'YYYY-MM-DD') AS created_at,
            r.name AS room_name, r.capacity, r.image_url, r.is_active
     FROM bookings b
     JOIN rooms r ON r.id = b.room_id
@@ -71,7 +73,7 @@ const createBooking = async ({ room_id, user_id, user_name, department_name, dat
   const query = `
     INSERT INTO bookings (room_id, user_id, user_name, department_name, date, start_time, end_time, created_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-    RETURNING id, room_id, user_id, user_name, department_name, date, start_time, end_time, created_at
+    RETURNING id, room_id, user_id, user_name, department_name, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
   `;
 
   const { rows } = await pool.query(query, [room_id, user_id, user_name, department_name, date, start_time, end_time]);
@@ -112,7 +114,7 @@ const updateBooking = async (id, { user_name, department_name, date, start_time,
         start_time = $4,
         end_time = $5
     WHERE id = $6
-    RETURNING id, room_id, user_id, user_name, department_name, date, start_time, end_time, created_at
+    RETURNING id, room_id, user_id, user_name, department_name, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
   `;
 
   const { rows } = await pool.query(updateQuery, [user_name, department_name, date, start_time, end_time, id]);
