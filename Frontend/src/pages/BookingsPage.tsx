@@ -23,12 +23,6 @@ export const BookingsPage = () => {
     staleTime: 1000 * 60,
   })
 
-  const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ['departments'],
-    queryFn: fetchDepartments,
-    staleTime: 1000 * 60 * 5,
-  })
-
   const [editingBooking, setEditingBooking] = useState<BookingApi | null>(null)
   const [userName, setUserName] = useState('')
   const [departmentName, setDepartmentName] = useState('')
@@ -40,11 +34,12 @@ export const BookingsPage = () => {
 
   useEffect(() => {
     if (editingBooking) {
+      console.log(editingBooking)
       setUserName(editingBooking.user_name)
       setDepartmentName(editingBooking.department_name)
       setEditDate(editingBooking.date)
-      setStartTime(editingBooking.start_time)
-      setEndTime(editingBooking.end_time)
+      setStartTime(editingBooking.start_time.slice(0,5))
+      setEndTime(editingBooking.end_time.slice(0,5))
       setFormError('')
       setFormSuccess('')
     } else {
@@ -134,19 +129,13 @@ export const BookingsPage = () => {
               </label>
               <label className="block text-sm text-slate-600">
                 Department
-                <select
+                <input
                   required
                   className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                  type="text"
                   value={departmentName}
                   onChange={(event) => setDepartmentName(event.target.value)}
-                >
-                  <option value="">Select a department</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.name}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </label>
             </div>
 
@@ -206,58 +195,56 @@ export const BookingsPage = () => {
         ) : bookings.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">No bookings found.</div>
         ) : (
-          bookings.map((booking) => 
-          {
-              const bookingEnd = new Date(
+          bookings.map((booking) => {
+            const bookingEnd = new Date(
               `${booking.date.split('T')[0]}T${booking.end_time}`
             );
-              const isPast = bookingEnd.getTime() < Date.now();
-            console.log(isPast, bookingEnd.getTime(), Date.now())
-           return (
-            <div key={booking.id} 
-           className={`flex flex-col rounded-3xl border border-slate-200 ${
-                    isPast ? 'bg-slate-100' : 'bg-white'
+            const isPast = bookingEnd.getTime() < Date.now();
+            return (
+              <div key={booking.id}
+                className={`flex flex-col rounded-3xl border border-slate-200 ${isPast ? 'bg-slate-100' : 'bg-white'
                   } shadow-sm`}>
-              <div className="space-y-4 p-5">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900">{booking.room_name}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{booking.user_name}</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-3">
-                    <span>📋</span>
-                    <div className="text-xs">
-                      <p className="font-semibold text-slate-700">{booking.department_name}</p>
+                <div className="space-y-4 p-5">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">{booking.room_name}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{booking.user_name}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-3">
+                      <span>📋</span>
+                      <div className="text-xs">
+                        <p className="font-semibold text-slate-700">{booking.department_name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 p-3">
+                      <span>⏰</span>
+                      <div className="text-xs">
+                        <p className="font-semibold text-slate-700">{formatBookingDate(booking.date)}</p>
+                        <p className="text-slate-500">{booking.start_time} - {booking.end_time}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 p-3">
-                    <span>⏰</span>
-                    <div className="text-xs">
-                      <p className="font-semibold text-slate-700">{formatBookingDate(booking.date)}</p>
-                      <p className="text-slate-500">{booking.start_time} - {booking.end_time}</p>
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                      <span>🆔</span> Room {booking.room_id}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                      <span>🪑</span> {booking.capacity || 0} seats
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Booked on {formatBookingDate(booking.created_at)}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                    <span>🆔</span> Room {booking.room_id}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                    <span>🪑</span> {booking.capacity || 0} seats
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500">
-                  Booked on {formatBookingDate(booking.created_at)}
+                <div className="flex gap-2 border-t border-slate-200 p-1">
+                  <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1"
+                    disabled={booking.date < new Date().toISOString().split('T')[0] || mutation.status === 'pending'}>
+                    Edit
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2 border-t border-slate-200 p-1">
-                <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1" 
-                  disabled={booking.date < new Date().toISOString().split('T')[0] || mutation.status === 'pending'}>
-                  Edit
-                </Button>
-              </div>
-            </div>
-          )})
+            )
+          })
         )}
       </div>
     </div>

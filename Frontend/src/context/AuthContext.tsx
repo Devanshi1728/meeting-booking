@@ -110,14 +110,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const register = async ({ name, email, department, password, confirmPassword }: RegisterFormValues) => {
+  const register = async ({ name, email, department_name, password, confirmPassword }: RegisterFormValues) => {
     if (password !== confirmPassword) return 'Passwords do not match.'
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, department, password }),
+        body: JSON.stringify({ name, email, department_name, password }),
       })
 
       const data = await response.json()

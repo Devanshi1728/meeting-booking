@@ -2,7 +2,7 @@ export type AuthUser = {
   id: string
   name: string
   email: string
-  department: string
+  department_name: string
 }
 
 export type AuthState = {
@@ -12,7 +12,7 @@ export type AuthState = {
 export type RegisterFormValues = {
   name: string
   email: string
-  department: string
+  department_name: string
   password: string
   confirmPassword: string
 }

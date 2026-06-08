@@ -4,24 +4,33 @@ import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { validateEmail, validatePassword, validateName } from '../lib/validators'
+import { fetchDepartments } from '../lib/api'
+import type { Department } from '../types'
+import { useQuery } from '@tanstack/react-query'
 
 export const RegisterPage = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', department: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', department_name: '' })
   const [error, setError] = useState('')
-  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', department: '', password: '', confirmPassword: '' })
+  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', department_name: '', password: '', confirmPassword: '' })
+
+  const { data: departments = [] } = useQuery<Department[]>({
+  queryKey: ['departments'],
+  queryFn: fetchDepartments,
+  staleTime: 1000 * 60 * 5,
+})
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const nameError = validateName(form.name)
     const emailError = validateEmail(form.email)
-    const departmentError = form.department ? '' : 'Department is required.'
+    const departmentError = form.department_name ? '' : 'Department is required.'
     const passwordError = validatePassword(form.password)
     const confirmError = form.password === form.confirmPassword ? '' : 'Passwords do not match.'
 
-    setFieldErrors({ name: nameError, email: emailError, department: departmentError, password: passwordError, confirmPassword: confirmError })
+    setFieldErrors({ name: nameError, email: emailError, department_name: departmentError, password: passwordError, confirmPassword: confirmError })
     if (nameError || emailError || departmentError || passwordError || confirmError) return
 
     const registerError = await register(form)
@@ -68,14 +77,21 @@ export const RegisterPage = () => {
           </div>
 
            <div className="space-y-2">
-            <Input
-              label="Department"
-              type="text"
-              value={form.department}
-              onChange={(event) => setForm({ ...form, department: event.target.value })}
-              placeholder="Technology"
-            />
-            {fieldErrors.department ? <p className="text-xs text-rose-600">{fieldErrors.department}</p> : null}
+            Department
+            <select
+              required
+              className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+              value={form.department_name}
+              onChange={(event) => setForm({ ...form, department_name: event.target.value })}
+              >
+                <option value="">Select a department</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.name}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            {fieldErrors.department_name ? <p className="text-xs text-rose-600">{fieldErrors.department_name}</p> : null}
           </div>
 
           <div className="space-y-2">

@@ -20,7 +20,7 @@ const signToken = (user) => {
 
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, department } = req.body
+    const { name, email, password, department_name } = req.body
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Name is required' })
@@ -30,7 +30,7 @@ const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email is required' })
     }
 
-    if (!department || typeof department !== 'string' || !department.trim()) {
+    if (!department_name || typeof department_name !== 'string' || !department_name.trim()) {
       return res.status(400).json({ success: false, message: 'Department is required' })
     }
 
@@ -47,7 +47,7 @@ const register = async (req, res, next) => {
       name,
       email,
       password,
-      department_name: department,
+      department_name
     })
 
     const token = signToken(user)
@@ -84,7 +84,7 @@ const login = async (req, res, next) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      department: user.department_name,
+      department_name: user.department_name,
     }
 
     res.status(200).json({ success: true, data: { user: safeUser, token } })

@@ -12,7 +12,7 @@ An internal meeting room booking web application for employees to easily reserve
 - View room availability
 - Edit / cancel bookings
 - Calendar / timeline view
-- Optional meeting details (meeting name, department, notes)
+- Optional meeting details (meeting name, department_name, notes)
 
 ### Admin Features
 - Add / edit meeting rooms

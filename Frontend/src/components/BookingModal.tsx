@@ -24,7 +24,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
   const [end, setEnd] = useState<string>('15:00')
   const { user } = useAuth()
   const [userName, setUserName] = useState<string>(user?.name ?? '')
-  const [departmentName, setDepartmentName] = useState<string>(user?.department ?? '')
+  const [departmentName, setDepartmentName] = useState<string>(user?.department_name ?? '')
   const [success, setSuccess] = useState<string>('')
   const [error, setError] = useState<string>('')
 
@@ -50,7 +50,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
 
   useEffect(() => {
     setUserName(user?.name ?? '')
-    setDepartmentName(user?.department ?? '')
+    setDepartmentName(user?.department_name ?? '')
   }, [user])
 
   const mutation = useMutation({
