@@ -1,4 +1,5 @@
 const bookingService = require('../services/booking.service');
+const authService = require('../services/auth.service');
 
 const createBooking = async (req, res, next) => {
   try {
@@ -27,14 +28,21 @@ const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Valid room id is required' });
     }
 
+    const fullUser = await authService.findUserById(Number(user.id));
+    if (!fullUser) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
     const booking = await bookingService.createBooking({
       room_id: roomId,
-      user_id: Number(user.id),
-      user_name: user.name.trim(),
-      department_name: String(user.department || user.department_name || '').trim(),
+      user_id: Number(fullUser.id),
+      user_name: fullUser.name.trim(),
+      department_name: String(fullUser.department_name || fullUser.department || '').trim(),
       date,
       start_time,
       end_time,
+      google_refresh_token: fullUser.google_refresh_token,
+      user_email: fullUser.email,
     });
 
     res.status(201).json({ success: true, data: booking });

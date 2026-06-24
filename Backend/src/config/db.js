@@ -13,6 +13,9 @@ const connectDB = async () => {
   try {
     const client = await pool.connect();
 
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_refresh_token TEXT`)
+    await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS google_event_id TEXT`)
+
     console.log("Database connected");
 
     client.release();

@@ -12,7 +12,7 @@ type AuthContextValue = {
   initializing: boolean
   login: (payload: LoginFormValues) => Promise<string | null>
   loginWithToken: (token: string) => Promise<string | null>
-  register: (payload: RegisterFormValues) => Promise<string | null>
+  // register: (payload: RegisterFormValues) => Promise<string | null>
   updateProfile: (payload: { department_name: string }) => Promise<string | null>
   logout: () => void
 }
@@ -138,28 +138,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const register = async ({ name, email, department_name, password, confirmPassword }: RegisterFormValues) => {
-    if (password !== confirmPassword) return 'Passwords do not match.'
+  // const register = async ({ name, email, department_name, password, confirmPassword }: RegisterFormValues) => {
+  //   if (password !== confirmPassword) return 'Passwords do not match.'
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, department_name, password }),
-      })
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ name, email, department_name, password }),
+  //     })
 
-      const data = await response.json()
-      if (!response.ok) {
-        return data.message || 'Unable to register.'
-      }
+  //     const data = await response.json()
+  //     if (!response.ok) {
+  //       return data.message || 'Unable to register.'
+  //     }
 
-      saveAuthToken(data.data.token)
-      setState({ user: data.data.user })
-      return null
-    } catch {
-      return 'Unable to register. Please try again.'
-    }
-  }
+  //     saveAuthToken(data.data.token)
+  //     setState({ user: data.data.user })
+  //     return null
+  //   } catch {
+  //     return 'Unable to register. Please try again.'
+  //   }
+  // }
 
   const updateProfile = async ({ department_name }: { department_name: string }) => {
     if (!state.user) {
@@ -194,7 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user: state.user, authenticated, initializing, login, loginWithToken, register, updateProfile, logout }}>
+    <AuthContext.Provider value={{ user: state.user, authenticated, initializing, login, loginWithToken, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   )

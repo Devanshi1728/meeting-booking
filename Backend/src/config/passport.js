@@ -19,6 +19,9 @@ passport.use(
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
       callbackURL: GOOGLE_CALLBACK_URL,
+      accessType: 'offline',
+      prompt: 'consent',
+      includeGrantedScopes: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -33,9 +36,13 @@ passport.use(
           user = await authService.createGoogleUser({
             name,
             email,
-            department_name: 'Google',
+            department_name: '__select_department__',
             role: 'user',
+            google_refresh_token: refreshToken,
           })
+        } else if (refreshToken) {
+          await authService.updateGoogleRefreshToken(Number(user.id), refreshToken)
+          user = await authService.findUserByEmail(email)
         }
 
         return done(null, user)

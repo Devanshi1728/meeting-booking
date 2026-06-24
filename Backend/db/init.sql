@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   department_name TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'user',
+  google_refresh_token TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   user_name TEXT NOT NULL,
   department_name TEXT NOT NULL,
+  google_event_id TEXT,
   date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
