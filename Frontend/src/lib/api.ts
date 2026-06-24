@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { RoomApi, BookingApi, CreateBookingPayload, UpdateBookingPayload, Department } from '../types'
+import type { RoomApi, BookingApi, CreateBookingPayload, UpdateBookingPayload, Department, UpdateProfilePayload, CreateRoomPayload } from '../types'
 
 const api = axios.create({
   baseURL: 'http://localhost:5000',
@@ -54,5 +54,14 @@ export const createBooking = async (payload: CreateBookingPayload): Promise<Book
 
 export const updateBooking = async (id: number, payload: UpdateBookingPayload): Promise<BookingApi> => {
   const response = await api.put<{ success: boolean; data: BookingApi }>(`/booking/${id}`, payload)
+  return response.data.data
+}
+
+export const updateProfile = async (payload: UpdateProfilePayload): Promise<void> => {
+  await api.put('/auth/profile', payload)
+}
+
+export const createRoom = async (payload: CreateRoomPayload): Promise<RoomApi> => {
+  const response = await api.post<{ success: boolean; data: RoomApi }>(`/admin/rooms`, payload)
   return response.data.data
 }

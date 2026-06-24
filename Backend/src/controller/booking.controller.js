@@ -31,7 +31,7 @@ const createBooking = async (req, res, next) => {
       room_id: roomId,
       user_id: Number(user.id),
       user_name: user.name.trim(),
-      department_name: user.department.trim(),
+      department_name: String(user.department || user.department_name || '').trim(),
       date,
       start_time,
       end_time,
@@ -74,7 +74,7 @@ const updateBooking = async (req, res, next) => {
       Number(id),
       {
         user_name: user.name.trim(),
-        department_name: user.department.trim(),
+        department_name: String(user.department || user.department_name || '').trim(),
         date,
         start_time,
         end_time,

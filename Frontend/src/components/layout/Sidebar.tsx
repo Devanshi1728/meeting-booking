@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
-const links = [
+const baseLinks = [
   { label: 'Dashboard', to: '/dashboard', icon: '📊' },
   { label: 'My Bookings', to: '/bookings', icon: '🗓️' },
   // { label: 'Calendar View', to: '/calendar', icon: '📅' },
@@ -9,6 +9,14 @@ const links = [
 
 export const Sidebar = () => {
   const { user } = useAuth()
+  const links = [
+    ...baseLinks,
+    { label: 'Profile', to: '/profile', icon: '👤' },
+  ]
+
+  if (user?.role === 'admin') {
+    links.push({ label: 'Admin Rooms', to: '/admin/rooms', icon: '🏢' })
+  }
 
   return (
     <aside className="flex h-full w-full max-w-[280px] flex-col gap-8 border-r border-slate-200 bg-white px-6 py-8">

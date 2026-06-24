@@ -15,7 +15,9 @@ const authMiddleware = (req, res, next) => {
       id: payload.sub,
       name: payload.name,
       email: payload.email,
+      department_name: payload.department_name,
       department: payload.department_name,
+      role: payload.role || 'user',
     }
     next()
   } catch (error) {

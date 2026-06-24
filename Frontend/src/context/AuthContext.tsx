@@ -11,7 +11,9 @@ type AuthContextValue = {
   authenticated: boolean
   initializing: boolean
   login: (payload: LoginFormValues) => Promise<string | null>
+  loginWithToken: (token: string) => Promise<string | null>
   register: (payload: RegisterFormValues) => Promise<string | null>
+  updateProfile: (payload: { department_name: string }) => Promise<string | null>
   logout: () => void
 }
 
@@ -110,6 +112,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const loginWithToken = async (token: string) => {
+    try {
+      saveAuthToken(token)
+
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+      if (!response.ok || !data.data?.user) {
+        clearAuth()
+        return data.message || 'Unable to log in with Google.'
+      }
+
+      setState({ user: data.data.user })
+      return null
+    } catch {
+      clearAuth()
+      return 'Unable to log in with Google. Please try again.'
+    }
+  }
+
   const register = async ({ name, email, department_name, password, confirmPassword }: RegisterFormValues) => {
     if (password !== confirmPassword) return 'Passwords do not match.'
 
@@ -133,13 +161,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const updateProfile = async ({ department_name }: { department_name: string }) => {
+    if (!state.user) {
+      return 'Unauthorized'
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY)}`,
+        },
+        body: JSON.stringify({ department_name }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        return data.message || 'Unable to update profile.'
+      }
+
+      setState({ user: data.data.user })
+      return null
+    } catch {
+      return 'Unable to update profile. Please try again.'
+    }
+  }
+
   const logout = () => {
     clearAuth()
     setState({ user: null })
   }
 
   return (
-    <AuthContext.Provider value={{ user: state.user, authenticated, initializing, login, register, logout }}>
+    <AuthContext.Provider value={{ user: state.user, authenticated, initializing, login, loginWithToken, register, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   )

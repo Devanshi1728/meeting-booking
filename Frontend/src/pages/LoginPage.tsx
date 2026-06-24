@@ -1,16 +1,39 @@
-import { type SyntheticEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { type SyntheticEvent, useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { validateEmail, validatePassword } from '../lib/validators'
 
 export const LoginPage = () => {
-  const { login } = useAuth()
+  const { login, loginWithToken } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' })
+  const [authenticatingGoogle, setAuthenticatingGoogle] = useState(false)
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search)
+    const token = query.get('token')
+    if (!token) return
+
+    const authenticate = async () => {
+      setAuthenticatingGoogle(true)
+      const loginError = await loginWithToken(token)
+      setAuthenticatingGoogle(false)
+
+      if (loginError) {
+        setError(loginError)
+        return
+      }
+
+      navigate('/dashboard')
+    }
+
+    authenticate()
+  }, [location.search, loginWithToken, navigate])
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -64,10 +87,30 @@ export const LoginPage = () => {
             {fieldErrors.password ? <p className="text-xs text-rose-600">{fieldErrors.password}</p> : null}
           </div>
 
-          <Button className="w-full" type="submit">
+          <Button className="w-full" type="submit" disabled={authenticatingGoogle}>
             Sign in
           </Button>
         </form>
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-2 text-slate-500">or continue with</span>
+            </div>
+          </div>
+
+          <a
+            href="http://localhost:5000/auth/google"
+            className="mt-4 inline-flex w-full items-center bg-blue-500 
+            justify-center rounded-3xl border border-slate-200 
+            px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-50 hover:text-black"
+          >
+            Continue with Google
+          </a>
+        </div>
 
         <p className="mt-6 text-center text-sm text-slate-600">
           New to RoomBook?{' '}

@@ -12,6 +12,7 @@ const signToken = (user) => {
       name: user.name,
       email: user.email,
       department_name: user.department_name,
+      role: user.role || 'user',
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
@@ -47,7 +48,8 @@ const register = async (req, res, next) => {
       name,
       email,
       password,
-      department_name
+      department_name,
+      role: 'user',
     })
 
     const token = signToken(user)
@@ -85,9 +87,55 @@ const login = async (req, res, next) => {
       name: user.name,
       email: user.email,
       department_name: user.department_name,
+      role: user.role || 'user',
     }
 
     res.status(200).json({ success: true, data: { user: safeUser, token } })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const googleCallback = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_auth_failed`)
+    }
+
+    const token = signToken(req.user)
+    const redirectUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:5173')
+    redirectUrl.pathname = '/login'
+    redirectUrl.searchParams.set('token', token)
+
+    res.redirect(redirectUrl.toString())
+  } catch (error) {
+    next(error)
+  }
+}
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const user = req.user
+    const { department_name } = req.body
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' })
+    }
+
+    if (!department_name || typeof department_name !== 'string' || !department_name.trim()) {
+      return res.status(400).json({ success: false, message: 'Department is required' })
+    }
+
+    const updatedUser = await authService.updateUserDepartment(Number(user.id), department_name.trim())
+    const safeUser = {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      department_name: updatedUser.department_name,
+      role: updatedUser.role || 'user',
+    }
+
+    res.status(200).json({ success: true, data: { user: safeUser } })
   } catch (error) {
     next(error)
   }
@@ -99,7 +147,20 @@ const me = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Unauthorized' })
     }
 
-    res.status(200).json({ success: true, data: { user: req.user } })
+    const user = await authService.findUserById(Number(req.user.id))
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      department_name: user.department_name,
+      role: user.role || 'user',
+    }
+
+    res.status(200).json({ success: true, data: { user: safeUser } })
   } catch (error) {
     next(error)
   }
@@ -108,5 +169,7 @@ const me = async (req, res, next) => {
 module.exports = {
   register,
   login,
+  googleCallback,
+  updateProfile,
   me,
 }

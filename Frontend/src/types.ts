@@ -3,6 +3,7 @@ export type AuthUser = {
   name: string
   email: string
   department_name: string
+  role?: string
 }
 
 export type AuthState = {
@@ -70,4 +71,15 @@ export type UpdateBookingPayload = {
   date: string
   start_time: string
   end_time: string
+}
+
+export type UpdateProfilePayload = {
+  department_name: string
+}
+
+export type CreateRoomPayload = {
+  name: string
+  capacity: number
+  image_url?: string | null
+  is_active: boolean
 }

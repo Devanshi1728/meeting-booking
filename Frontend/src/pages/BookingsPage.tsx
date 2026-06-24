@@ -202,7 +202,7 @@ export const BookingsPage = () => {
             const isPast = bookingEnd.getTime() < Date.now();
             return (
               <div key={booking.id}
-                className={`flex flex-col rounded-3xl border border-slate-200 ${isPast ? 'bg-slate-100' : 'bg-white'
+                className={`flex flex-col rounded-3xl border border-slate-200 ${isPast ? 'bg-slate-100 cursor-not-allowed' : 'bg-white'
                   } shadow-sm`}>
                 <div className="space-y-4 p-5">
                   <div>
@@ -238,7 +238,7 @@ export const BookingsPage = () => {
                 </div>
                 <div className="flex gap-2 border-t border-slate-200 p-1">
                   <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1"
-                    disabled={booking.date < new Date().toISOString().split('T')[0] || mutation.status === 'pending'}>
+                    disabled={isPast}>
                     Edit
                   </Button>
                 </div>
