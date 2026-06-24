@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchBookings, updateBooking, fetchDepartments } from '../lib/api'
-import type { BookingApi, UpdateBookingPayload, Department } from '../types'
+import { fetchBookings, updateBooking } from '../lib/api'
+import type { BookingApi, UpdateBookingPayload } from '../types'
 import { Button } from '../components/ui/Button'
 
 const formatBookingDate = (value: string) => {
@@ -26,6 +26,7 @@ export const BookingsPage = () => {
   const [editingBooking, setEditingBooking] = useState<BookingApi | null>(null)
   const [userName, setUserName] = useState('')
   const [departmentName, setDepartmentName] = useState('')
+  const [description, setDescription] = useState('')
   const [editDate, setEditDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
@@ -37,6 +38,7 @@ export const BookingsPage = () => {
       console.log(editingBooking)
       setUserName(editingBooking.user_name)
       setDepartmentName(editingBooking.department_name)
+      setDescription(editingBooking.description || '')
       setEditDate(editingBooking.date)
       setStartTime(editingBooking.start_time.slice(0,5))
       setEndTime(editingBooking.end_time.slice(0,5))
@@ -45,6 +47,7 @@ export const BookingsPage = () => {
     } else {
       setUserName('')
       setDepartmentName('')
+      setDescription('')
       setEditDate('')
       setStartTime('09:00')
       setEndTime('10:00')
@@ -80,11 +83,17 @@ export const BookingsPage = () => {
       return
     }
 
+    if (!description.trim()) {
+      setFormError('Meeting description is required')
+      return
+    }
+
     mutation.mutate({
       id: editingBooking.id,
       payload: {
         user_name: userName.trim(),
         department_name: departmentName.trim(),
+        description: description.trim(),
         date: editDate,
         start_time: startTime,
         end_time: endTime,
@@ -172,6 +181,16 @@ export const BookingsPage = () => {
               </label>
             </div>
 
+             <label className="block text-sm text-slate-600">
+              Meeting description
+              <textarea
+                required
+                className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </label>
+
             <div className="flex flex-wrap items-center gap-3">
               <Button type="submit" disabled={mutation.status === 'pending'}>
                 {mutation.status === 'pending' ? 'Saving…' : 'Save changes'}
@@ -223,6 +242,12 @@ export const BookingsPage = () => {
                         <p className="text-slate-500">{booking.start_time} - {booking.end_time}</p>
                       </div>
                     </div>
+                    {booking.description ? (
+                      <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                        <p className="font-semibold text-slate-700">Meeting description</p>
+                        <p className="mt-1 text-slate-600">{booking.description}</p>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">

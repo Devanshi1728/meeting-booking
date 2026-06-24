@@ -22,7 +22,7 @@ const getAllBookings = async ({ userId, roomId, date } = {}) => {
   }
 
   const query = `
-    SELECT b.id, b.room_id, b.user_id, b.user_name, b.department_name, b.google_event_id,
+    SELECT b.id, b.room_id, b.user_id, b.user_name, b.department_name, b.google_event_id, b.description,
            TO_CHAR(b.date, 'YYYY-MM-DD') AS date, b.start_time, b.end_time, 
            TO_CHAR(b.created_at, 'YYYY-MM-DD') AS created_at,
            r.name AS room_name, r.capacity, r.image_url, r.is_active
@@ -56,7 +56,7 @@ const hasBookingConflict = async (room_id, date, start_time, end_time, excludeBo
   return rowCount > 0;
 };
 
-const createBooking = async ({ room_id, user_id, user_name, department_name, date, start_time, end_time, google_refresh_token, user_email }) => {
+const createBooking = async ({ room_id, user_id, user_name, department_name, date, start_time, end_time, description, google_refresh_token, user_email }) => {
   const room = await roomService.getRoomById(room_id);
   if (!room) {
     const error = new Error('Room not found');
@@ -82,16 +82,17 @@ const createBooking = async ({ room_id, user_id, user_name, department_name, dat
       date,
       startTime: start_time,
       endTime: end_time,
+      description,
     })
   }
 
   const query = `
-    INSERT INTO bookings (room_id, user_id, user_name, department_name, google_event_id, date, start_time, end_time, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-    RETURNING id, room_id, user_id, user_name, department_name, google_event_id, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
+    INSERT INTO bookings (room_id, user_id, user_name, department_name, google_event_id, description, date, start_time, end_time, created_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+    RETURNING id, room_id, user_id, user_name, department_name, google_event_id, description, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
   `;
 
-  const { rows } = await pool.query(query, [room_id, user_id, user_name, department_name, google_event_id, date, start_time, end_time]);
+  const { rows } = await pool.query(query, [room_id, user_id, user_name, department_name, google_event_id, description, date, start_time, end_time]);
   return {
     ...rows[0],
     room_name: room.name,
@@ -101,9 +102,9 @@ const createBooking = async ({ room_id, user_id, user_name, department_name, dat
   };
 };
 
-const updateBooking = async (id, { user_name, department_name, date, start_time, end_time }, userId) => {
+const updateBooking = async (id, { user_name, department_name, date, start_time, end_time, description }, userId, google_refresh_token, user_email) => {
   const bookingQuery = `
-    SELECT room_id, user_id
+    SELECT room_id, user_id, google_event_id
     FROM bookings
     WHERE id = $1
   `;
@@ -121,18 +122,39 @@ const updateBooking = async (id, { user_name, department_name, date, start_time,
     throw error;
   }
 
+  if (existingBooking.google_event_id && google_refresh_token) {
+    try {
+      const room = await roomService.getRoomById(existingBooking.room_id);
+      await googleService.updateCalendarEvent({
+        refreshToken: google_refresh_token,
+        eventId: existingBooking.google_event_id,
+        roomName: room?.name,
+        userName: user_name,
+        userEmail: user_email,
+        departmentName: department_name,
+        date,
+        startTime: start_time,
+        endTime: end_time,
+        description,
+      })
+    } catch (error) {
+      console.warn('Failed to update Google calendar event', error)
+    }
+  }
+
   const updateQuery = `
     UPDATE bookings
     SET user_name = $1,
         department_name = $2,
-        date = $3,
-        start_time = $4,
-        end_time = $5
-    WHERE id = $6
-    RETURNING id, room_id, user_id, user_name, department_name, google_event_id, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
+        description = $3,
+        date = $4,
+        start_time = $5,
+        end_time = $6
+    WHERE id = $7
+    RETURNING id, room_id, user_id, user_name, department_name, google_event_id, description, TO_CHAR(date, 'YYYY-MM-DD') AS date, start_time, end_time, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
   `;
 
-  const { rows } = await pool.query(updateQuery, [user_name, department_name, date, start_time, end_time, id]);
+  const { rows } = await pool.query(updateQuery, [user_name, department_name, description, date, start_time, end_time, id]);
   const booking = rows[0];
 
   if (!booking) {

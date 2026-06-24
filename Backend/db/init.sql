@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   user_name TEXT NOT NULL,
   department_name TEXT NOT NULL,
   google_event_id TEXT,
+  description TEXT,
   date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,

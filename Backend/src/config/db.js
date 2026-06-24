@@ -15,6 +15,7 @@ const connectDB = async () => {
 
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_refresh_token TEXT`)
     await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS google_event_id TEXT`)
+    await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS description TEXT`)
 
     console.log("Database connected");
 

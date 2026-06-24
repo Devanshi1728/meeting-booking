@@ -49,6 +49,7 @@ export type BookingApi = {
   room_name: string
   department_name: string
   user_name: string
+  description?: string | null
   date: string
   start_time: string
   end_time: string
@@ -63,6 +64,7 @@ export type CreateBookingPayload = {
   date: string
   start_time: string
   end_time: string
+  description?: string
 }
 
 export type UpdateBookingPayload = {
@@ -71,6 +73,7 @@ export type UpdateBookingPayload = {
   date: string
   start_time: string
   end_time: string
+  description?: string
 }
 
 export type UpdateProfilePayload = {

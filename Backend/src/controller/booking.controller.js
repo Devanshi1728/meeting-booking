@@ -3,7 +3,7 @@ const authService = require('../services/auth.service');
 
 const createBooking = async (req, res, next) => {
   try {
-    const { room_id, date, start_time, end_time } = req.body;
+    const { room_id, date, start_time, end_time, description } = req.body;
     const user = req.user;
 
     if (!user) {
@@ -41,6 +41,7 @@ const createBooking = async (req, res, next) => {
       date,
       start_time,
       end_time,
+      description: String(description || '').trim(),
       google_refresh_token: fullUser.google_refresh_token,
       user_email: fullUser.email,
     });
@@ -54,7 +55,7 @@ const createBooking = async (req, res, next) => {
 const updateBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { date, start_time, end_time } = req.body;
+    const { date, start_time, end_time, description } = req.body;
     const user = req.user;
 
     if (!user) {
@@ -78,6 +79,11 @@ const updateBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Valid end time is required (HH:MM)' });
     }
 
+    const fullUser = await authService.findUserById(Number(user.id));
+    if (!fullUser) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
     const booking = await bookingService.updateBooking(
       Number(id),
       {
@@ -86,8 +92,11 @@ const updateBooking = async (req, res, next) => {
         date,
         start_time,
         end_time,
+        description: String(description || '').trim(),
       },
-      Number(user.id)
+      Number(user.id),
+      fullUser.google_refresh_token,
+      fullUser.email,
     );
 
     if (!booking) {

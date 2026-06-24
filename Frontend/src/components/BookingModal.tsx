@@ -25,6 +25,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
   const { user } = useAuth()
   const [userName, setUserName] = useState<string>(user?.name ?? '')
   const [departmentName, setDepartmentName] = useState<string>(user?.department_name ?? '')
+  const [description, setDescription] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
   const [error, setError] = useState<string>('')
 
@@ -85,6 +86,11 @@ export const BookingModal = ({ room, onClose }: Props) => {
       return
     }
 
+    if (description.trim().length === 0) {
+      setError('Meeting description is required')
+      return
+    }
+
     if(start >= end && start < new Date().toISOString().slice(0, 10) 
     ) {
       setError('End time must be after start time')
@@ -103,6 +109,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
       date,
       start_time: start,
       end_time: end,
+      description: description.trim(),
     }
 
     mutation.mutate(payload)
@@ -150,7 +157,7 @@ export const BookingModal = ({ room, onClose }: Props) => {
               onChange={(e) => setDate(e.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-600">
+           <label className="block text-sm text-slate-600">
             Time
             <div className="mt-2 flex gap-2">
               <input
@@ -169,6 +176,17 @@ export const BookingModal = ({ room, onClose }: Props) => {
                 onChange={(e) => setEnd(e.target.value)}
               />
             </div>
+          </label>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-1">
+          <label className="block text-sm text-slate-600">
+            Meeting description
+            <textarea
+              required
+              className="mt-2 w-full min-h-[120px] rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </label>
         </div>
         <div className="flex items-center gap-3">
