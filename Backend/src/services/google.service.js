@@ -9,6 +9,18 @@ const createOAuthClient = () => {
   return oAuth2Client
 }
 
+const createCalendarClient = async (refreshToken, action) => {
+  if (!refreshToken) {
+    throw new Error(`Google refresh token is required to ${action} calendar event`)
+  }
+
+  const oAuth2Client = createOAuthClient()
+  const { tokens } = await oAuth2Client.refreshToken(refreshToken)
+  oAuth2Client.setCredentials(tokens)
+
+  return google.calendar({ version: 'v3', auth: oAuth2Client })
+}
+
 const insertCalendarEvent = async ({
   refreshToken,
   roomName,
@@ -20,17 +32,9 @@ const insertCalendarEvent = async ({
   endTime,
   description,
 }) => {
-  if (!refreshToken) {
-    throw new Error('Google refresh token is required to create calendar event')
-  }
-
-  const oAuth2Client = createOAuthClient()
-  const { tokens } = await oAuth2Client.refreshToken(refreshToken)
-  oAuth2Client.setCredentials(tokens)
-
-  const calendar = google.calendar({ version: 'v3', auth: oAuth2Client })
+  const calendar = await createCalendarClient(refreshToken, 'create')
   const event = {
-    summary: `Room booking: ${roomName}`,
+    summary: `Invitation: ${roomName}`,
     description: description || `Booking created by ${userName}\nDepartment: ${departmentName}\nRoom: ${roomName}`,
     start: {
       dateTime: `${date}T${startTime}:00`,
@@ -64,15 +68,7 @@ const updateCalendarEvent = async ({
   endTime,
   description,
 }) => {
-  if (!refreshToken) {
-    throw new Error('Google refresh token is required to update calendar event')
-  }
-
-  const oAuth2Client = createOAuthClient()
-  const { tokens } = await oAuth2Client.refreshToken(refreshToken)
-  oAuth2Client.setCredentials(tokens)
-
-  const calendar = google.calendar({ version: 'v3', auth: oAuth2Client })
+  const calendar = await createCalendarClient(refreshToken, 'update')
   const event = {
     summary: `Room booking: ${roomName}`,
     description: description || `Booking updated by ${userName}\nDepartment: ${departmentName}\nRoom: ${roomName}`,
@@ -97,7 +93,39 @@ const updateCalendarEvent = async ({
   return response.data.id
 }
 
+const getCalendarEvent = async ({ refreshToken, eventId }) => {
+  const calendar = await createCalendarClient(refreshToken, 'read')
+  const response = await calendar.events.get({
+    calendarId: 'primary',
+    eventId,
+  })
+
+  return response.data
+}
+
+const deleteCalendarEvent = async ({ refreshToken, eventId }) => {
+  const calendar = await createCalendarClient(refreshToken, 'delete')
+
+  try {
+    await calendar.events.delete({
+      calendarId: 'primary',
+      eventId,
+      sendUpdates: 'all',
+    })
+  } catch (error) {
+    if ([404, 410].includes(Number(error?.code || error?.response?.status))) {
+      return false
+    }
+
+    throw error
+  }
+
+  return true
+}
+
 module.exports = {
   insertCalendarEvent,
   updateCalendarEvent,
+  getCalendarEvent,
+  deleteCalendarEvent,
 }

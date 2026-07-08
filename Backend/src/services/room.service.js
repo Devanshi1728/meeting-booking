@@ -1,6 +1,9 @@
 const { pool } = require('../config/db');
+const calendarSyncService = require('./calendarSync.service');
 
 const getAllRooms = async () => {
+  await calendarSyncService.syncCancelledGoogleBookings({ date: new Date().toISOString().slice(0, 10) });
+
   const query = `
     SELECT r.id,
            r.name,
@@ -37,6 +40,8 @@ const getAllRooms = async () => {
 };
 
 const getRoomById = async (id) => {
+  await calendarSyncService.syncCancelledGoogleBookings({ roomId: id, date: new Date().toISOString().slice(0, 10) });
+
   const query = `
     SELECT r.id,
            r.name,

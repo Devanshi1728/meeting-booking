@@ -109,6 +109,40 @@ const updateBooking = async (req, res, next) => {
   }
 };
 
+const cancelBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    if (!id || Number.isNaN(Number(id))) {
+      return res.status(400).json({ success: false, message: 'Invalid booking id' });
+    }
+
+    const fullUser = await authService.findUserById(Number(user.id));
+    if (!fullUser) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const booking = await bookingService.cancelBooking(
+      Number(id),
+      Number(user.id),
+      fullUser.google_refresh_token,
+    );
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    res.status(200).json({ success: true, data: booking, message: 'Booking cancelled successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getAllBookings = async (req, res, next) => {
   try {
     const user = req.user;
@@ -131,6 +165,7 @@ const getAllBookings = async (req, res, next) => {
 
 module.exports = {
   createBooking,
+  cancelBooking,
   getAllBookings,
   updateBooking,
 };

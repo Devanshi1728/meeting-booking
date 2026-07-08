@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchBookings, updateBooking } from '../lib/api'
+import { cancelBooking, fetchBookings, updateBooking } from '../lib/api'
 import type { BookingApi, UpdateBookingPayload } from '../types'
 import { Button } from '../components/ui/Button'
 
@@ -67,6 +67,21 @@ export const BookingsPage = () => {
       setFormError(error instanceof Error ? error.message : 'Unable to update booking')
     },
   })
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['rooms'] })
+    },
+  })
+
+  const handleCancelBooking = (booking: BookingApi) => {
+    const confirmed = window.confirm(`Cancel booking for ${booking.room_name} on ${formatBookingDate(booking.date)}?`)
+    if (!confirmed) return
+
+    cancelMutation.mutate(booking.id)
+  }
 
   const handleEditSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -206,6 +221,12 @@ export const BookingsPage = () => {
         </div>
       ) : null}
 
+      {cancelMutation.error ? (
+        <div className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
+          {cancelMutation.error instanceof Error ? cancelMutation.error.message : 'Unable to cancel booking'}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">Loading bookings…</div>
@@ -265,6 +286,14 @@ export const BookingsPage = () => {
                   <Button variant="ghost" onClick={() => setEditingBooking(booking)} className="flex-1"
                     disabled={isPast}>
                     Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleCancelBooking(booking)}
+                    className="flex-1"
+                    disabled={isPast || cancelMutation.status === 'pending'}
+                  >
+                    {cancelMutation.status === 'pending' ? 'Cancelling...' : 'Cancel'}
                   </Button>
                 </div>
               </div>

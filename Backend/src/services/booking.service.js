@@ -1,8 +1,11 @@
 const { pool } = require('../config/db');
 const roomService = require('./room.service');
 const googleService = require('./google.service');
+const calendarSyncService = require('./calendarSync.service');
 
 const getAllBookings = async ({ userId, roomId, date } = {}) => {
+  await calendarSyncService.syncCancelledGoogleBookings({ userId, roomId, date });
+
   const filters = [];
   const params = [];
 
@@ -37,6 +40,8 @@ const getAllBookings = async ({ userId, roomId, date } = {}) => {
 };
 
 const hasBookingConflict = async (room_id, date, start_time, end_time, excludeBookingId = null) => {
+  await calendarSyncService.syncCancelledGoogleBookings({ roomId: room_id, date });
+
   const params = [room_id, date, end_time, start_time];
   let query = `
     SELECT 1
@@ -103,6 +108,8 @@ const createBooking = async ({ room_id, user_id, user_name, department_name, dat
 };
 
 const updateBooking = async (id, { user_name, department_name, date, start_time, end_time, description }, userId, google_refresh_token, user_email) => {
+  await calendarSyncService.syncCancelledGoogleBookings({ bookingId: id, userId });
+
   const bookingQuery = `
     SELECT room_id, user_id, google_event_id
     FROM bookings
@@ -172,8 +179,39 @@ const updateBooking = async (id, { user_name, department_name, date, start_time,
   };
 };
 
+const cancelBooking = async (id, userId, google_refresh_token) => {
+  await calendarSyncService.syncCancelledGoogleBookings({ bookingId: id, userId });
+
+  const bookingQuery = `
+    SELECT b.id, b.room_id, b.user_id, b.user_name, b.department_name, b.google_event_id, b.description,
+           TO_CHAR(b.date, 'YYYY-MM-DD') AS date, b.start_time, b.end_time,
+           TO_CHAR(b.created_at, 'YYYY-MM-DD') AS created_at,
+           r.name AS room_name, r.capacity, r.image_url, r.is_active
+    FROM bookings b
+    JOIN rooms r ON r.id = b.room_id
+    WHERE b.id = $1
+  `;
+  const bookingResult = await pool.query(bookingQuery, [id]);
+  const booking = bookingResult.rows[0];
+
+  if (!booking || Number(booking.user_id) !== Number(userId)) {
+    return null;
+  }
+
+  if (booking.google_event_id && google_refresh_token) {
+    await googleService.deleteCalendarEvent({
+      refreshToken: google_refresh_token,
+      eventId: booking.google_event_id,
+    });
+  }
+
+  await pool.query('DELETE FROM bookings WHERE id = $1 AND user_id = $2', [id, userId]);
+  return booking;
+};
+
 module.exports = {
   getAllBookings,
   createBooking,
   updateBooking,
+  cancelBooking,
 };

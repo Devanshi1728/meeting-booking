@@ -57,6 +57,11 @@ export const updateBooking = async (id: number, payload: UpdateBookingPayload): 
   return response.data.data
 }
 
+export const cancelBooking = async (id: number): Promise<BookingApi> => {
+  const response = await api.delete<{ success: boolean; data: BookingApi }>(`/booking/${id}`)
+  return response.data.data
+}
+
 export const updateProfile = async (payload: UpdateProfilePayload): Promise<void> => {
   await api.put('/auth/profile', payload)
 }
